@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chexnet-prod
+  labels:
+    app: chexnet
+    env: production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chexnet-app
+  namespace: chexnet-prod
+  labels:
+    app: chexnet
+    env: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chexnet
+  template:
+    metadata:
+      labels:
+        app: chexnet
+        env: production
+    spec:
+      containers:
+        - name: chexnet-app
+          image: us-central1-docker.pkg.dev/chexnet-app/chexnet/chexnet-app:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          env:
+            - name: ENVIRONMENT
+              value: production
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1536Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2048Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chexnet-service
+  namespace: chexnet-prod
+  labels:
+    app: chexnet
+    env: production
+spec:
+  type: ClusterIP
+  selector:
+    app: chexnet
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 7860
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chexnet-app-hpa
+  namespace: chexnet-prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chexnet-app
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75

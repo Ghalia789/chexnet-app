@@ -1,0 +1,14 @@
+# Turn ON external access for demo day (creates external LoadBalancer)
+kubectl apply -f K8s/production-lb.yaml
+
+# Watch until EXTERNAL-IP is assigned
+kubectl -n chexnet-prod get svc chexnet-service -w
+
+# Alternative one-liner to turn ON without manifest
+kubectl -n chexnet-prod patch svc chexnet-service -p "{\"spec\":{\"type\":\"LoadBalancer\"}}"
+
+# Turn OFF external access after demo (back to internal only)
+kubectl -n chexnet-prod patch svc chexnet-service -p "{\"spec\":{\"type\":\"ClusterIP\"}}"
+
+# Alternative reset using baseline manifest
+kubectl apply -f K8s/production.yaml

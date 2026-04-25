@@ -1,0 +1,52 @@
+# GCP Deployment Commands Template
+# Replace ALL UPPERCASE placeholders with your actual values before running
+
+# 0) Set variables (replace placeholders)
+# PROJECT_ID: your-gcp-project-id
+# REGION: us-central1 (or your preferred region)
+# ZONE: us-central1-a (or your preferred zone)
+# REPO: chexnet-docker-repo (or your repo name)
+# TAG: v1 (or your image tag)
+
+# 1) Select project
+gcloud config set project PROJECT_ID
+
+# 2) Enable APIs
+gcloud services enable container.googleapis.com artifactregistry.googleapis.com
+
+# 3) Create Artifact Registry repository (run once)
+gcloud artifacts repositories create REPO --repository-format=docker --location=REGION --description="CheXNet container repository"
+
+# 4) Configure Docker auth
+gcloud auth configure-docker REGION-docker.pkg.dev
+
+# 5) Tag and push image
+docker tag chexnet-app:local REGION-docker.pkg.dev/PROJECT_ID/REPO/chexnet-app:TAG
+docker push REGION-docker.pkg.dev/PROJECT_ID/REPO/chexnet-app:TAG
+
+# 6) Create GKE cluster (cost-aware defaults)
+gcloud container clusters create chexnet-cluster --zone ZONE --num-nodes 1 --machine-type e2-standard-2
+
+# 7) Get cluster credentials
+gcloud container clusters get-credentials chexnet-cluster --zone ZONE
+
+# 8) Apply environment manifests
+kubectl apply -f K8s/development.yaml
+kubectl apply -f K8s/test.yaml
+kubectl apply -f K8s/production.yaml
+
+# 9) Verify workloads
+kubectl get ns
+kubectl -n chexnet-dev get all
+kubectl -n chexnet-test get all
+kubectl -n chexnet-prod get all
+
+# 10) Turn production LoadBalancer ON for demo only
+kubectl apply -f K8s/production-lb.yaml
+kubectl -n chexnet-prod get svc chexnet-service -w
+
+# 11) Turn LoadBalancer OFF after demo
+kubectl -n chexnet-prod patch svc chexnet-service -p "{\"spec\":{\"type\":\"ClusterIP\"}}"
+
+# 12) Cleanup when done
+gcloud container clusters delete chexnet-cluster --zone ZONE --quiet

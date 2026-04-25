@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chexnet-dev
+  labels:
+    app: chexnet
+    env: development
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chexnet-app
+  namespace: chexnet-dev
+  labels:
+    app: chexnet
+    env: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chexnet
+  template:
+    metadata:
+      labels:
+        app: chexnet
+        env: development
+    spec:
+      containers:
+        - name: chexnet-app
+          image: us-central1-docker.pkg.dev/chexnet-app/chexnet/chexnet-app:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          env:
+            - name: ENVIRONMENT
+              value: development
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "1024Mi"
+            limits:
+              cpu: "700m"
+              memory: "1536Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chexnet-service
+  namespace: chexnet-dev
+  labels:
+    app: chexnet
+    env: development
+spec:
+  type: ClusterIP
+  selector:
+    app: chexnet
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 7860
