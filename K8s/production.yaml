@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: chexnet-app
-          image: us-central1-docker.pkg.dev/chexnet-app/chexnet/chexnet-app:v1
+          image: us-central1-docker.pkg.dev/chexnet-app/chexnet/chexnet-app:v2
           imagePullPolicy: Always
           ports:
             - containerPort: 7860

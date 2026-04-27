@@ -1,0 +1,16 @@
+# Keep Cloud Build uploads minimal while ensuring runtime artifacts are present
+.git
+.gitignore
+venv/
+__pycache__/
+*.pyc
+.gradio/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+docs/
+venv.bak/
+
+# Explicitly include the model needed at runtime
+!models/
+!models/best_chexnet.pth
